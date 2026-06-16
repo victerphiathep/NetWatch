@@ -5,17 +5,17 @@ import random
 import pandas as pd
 
 
-OUTPUT_DIR = Path("data")
-OUTPUT_FILE = OUTPUT_DIR / "mock_node_readings.csv"
+DATA_DIR = Path("data")
+RAW_READINGS_FILE = DATA_DIR / "mock_node_readings.csv"
 
-REGIONS = {
+REGION_NODE_IDS = {
     "Philadelphia": ["PHL-001", "PHL-002", "PHL-003", "PHL-004"],
     "New York": ["NYC-001", "NYC-002", "NYC-003"],
     "Chicago": ["CHI-001", "CHI-002", "CHI-003"],
 }
 
 
-def classify_status(download_utilization_pct):
+def classify_reading_status(download_utilization_pct):
     if download_utilization_pct >= 85:
         return "critical"
     if download_utilization_pct >= 70:
@@ -23,7 +23,7 @@ def classify_status(download_utilization_pct):
     return "normal"
 
 
-def peak_hour_boost(hour):
+def calculate_peak_hour_utilization_boost(hour):
     if 18 <= hour <= 22:
         return 25
     if 12 <= hour <= 17:
@@ -33,24 +33,31 @@ def peak_hour_boost(hour):
     return 0
 
 
-def generate_readings():
+def generate_mock_node_readings():
     random.seed(42)
 
     start_time = datetime(2026, 6, 1, 0, 0)
     days_to_generate = 7
-    rows = []
+    generated_reading_records = []
 
     for hour_offset in range(days_to_generate * 24):
         timestamp = start_time + timedelta(hours=hour_offset)
 
-        for region, node_ids in REGIONS.items():
+        for region, node_ids in REGION_NODE_IDS.items():
             for node_id in node_ids:
                 base_utilization = random.uniform(25, 65)
-                hourly_boost = peak_hour_boost(timestamp.hour)
-                noise = random.uniform(-5, 5)
+                hourly_utilization_boost = calculate_peak_hour_utilization_boost(
+                    timestamp.hour
+                )
+                utilization_noise = random.uniform(-5, 5)
 
                 download_utilization_pct = round(
-                    min(base_utilization + hourly_boost + noise, 100),
+                    min(
+                        base_utilization
+                        + hourly_utilization_boost
+                        + utilization_noise,
+                        100,
+                    ),
                     2,
                 )
                 upload_utilization_pct = round(
@@ -58,7 +65,7 @@ def generate_readings():
                     2,
                 )
 
-                rows.append(
+                generated_reading_records.append(
                     {
                         "timestamp": timestamp,
                         "node_id": node_id,
@@ -66,22 +73,22 @@ def generate_readings():
                         "download_utilization_pct": download_utilization_pct,
                         "upload_utilization_pct": upload_utilization_pct,
                         "capacity_mbps": 1000,
-                        "status": classify_status(download_utilization_pct),
+                        "status": classify_reading_status(download_utilization_pct),
                     }
                 )
 
-    return pd.DataFrame(rows)
+    return pd.DataFrame(generated_reading_records)
 
 
 def main():
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    DATA_DIR.mkdir(exist_ok=True)
 
-    df = generate_readings()
-    df.to_csv(OUTPUT_FILE, index=False)
+    raw_readings_dataframe = generate_mock_node_readings()
+    raw_readings_dataframe.to_csv(RAW_READINGS_FILE, index=False)
 
-    print(f"Generated {len(df)} rows")
-    print(f"Saved mock readings to {OUTPUT_FILE}")
-    print(df.head())
+    print(f"Generated {len(raw_readings_dataframe)} rows")
+    print(f"Saved mock readings to {RAW_READINGS_FILE}")
+    print(raw_readings_dataframe.head())
 
 
 if __name__ == "__main__":

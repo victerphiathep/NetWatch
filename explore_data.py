@@ -13,42 +13,48 @@ DATA_FILE = PROJECT_ROOT / "data" / "mock_node_readings.csv"
 
 
 def main():
-    df = pd.read_csv(DATA_FILE)
+    raw_readings_dataframe = pd.read_csv(DATA_FILE)
 
     print("First 5 rows:")
-    print(df.head())
+    print(raw_readings_dataframe.head())
 
     print("\nRows and columns:")
-    print(df.shape)
+    print(raw_readings_dataframe.shape)
 
     print("\nColumn names:")
-    print(df.columns)
+    print(raw_readings_dataframe.columns)
 
     print("\nDataFrame info:")
-    df.info()
+    raw_readings_dataframe.info()
 
     print("\nSummary statistics:")
-    print(df.describe())
+    print(raw_readings_dataframe.describe())
 
     print("___NEW EXAMPLE___")
 
     print("\nSelected columns:")
-    print(df[["timestamp", "node_id", "region", "download_utilization_pct"]].head())
+    print(
+        raw_readings_dataframe[
+            ["timestamp", "node_id", "region", "download_utilization_pct"]
+        ].head()
+    )
 
-    critical_readings = df[df["download_utilization_pct"] >= 85]
+    critical_readings_dataframe = raw_readings_dataframe[
+        raw_readings_dataframe["download_utilization_pct"] >= 85
+    ]
 
     print("\nCritical readings:")
-    print(critical_readings.head())
+    print(critical_readings_dataframe.head())
 
     print("\nCritical reading count:")
-    print(len(critical_readings))
+    print(len(critical_readings_dataframe))
     print("\nCritical readings by node:")
-    print(get_crit_counts_by_node(critical_readings))
+    print(get_critical_reading_counts_by_node(critical_readings_dataframe))
 
 
-def get_crit_counts_by_node(critical_readings):
+def get_critical_reading_counts_by_node(critical_readings_dataframe):
     critical_counts_by_node = (
-        critical_readings
+        critical_readings_dataframe
         .groupby("node_id")
         .size()
         .sort_values(ascending=False)

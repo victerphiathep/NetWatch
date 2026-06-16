@@ -6,19 +6,19 @@ from pathlib import Path
 import sqlite3
 
 PROJECT_ROOT = Path(__file__).parent
-DB_FILE = PROJECT_ROOT / "data" / "netwatch.db"
+NETWATCH_DATABASE_FILE = PROJECT_ROOT / "data" / "netwatch.db"
 
-def run_query(connection, query):
-    rows = connection.execute(query).fetchall()
+def print_query_results(database_connection, sql_query):
+    query_rows = database_connection.execute(sql_query).fetchall()
 
-    for row in rows:
-        print(row)
+    for query_row in query_rows:
+        print(query_row)
 
 def main():
-    with sqlite3.connect(DB_FILE) as connection:
+    with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
         print("Total raw readings:")
-        run_query(
-            connection,
+        print_query_results(
+            database_connection,
             """
             SELECT COUNT(*)
             FROM raw_node_readings;
@@ -26,8 +26,8 @@ def main():
         )
 
         print("\nTop 10 critical readings:")
-        run_query(
-            connection,
+        print_query_results(
+            database_connection,
             """
             SELECT
                 timestamp,
@@ -43,8 +43,8 @@ def main():
         )
 
         print("\nCritical reading count by node:")
-        run_query(
-            connection,
+        print_query_results(
+            database_connection,
             """
             SELECT
                 node_id,
@@ -57,8 +57,8 @@ def main():
         )
 
         print("\nHigh-risk node summary:")
-        run_query(
-            connection,
+        print_query_results(
+            database_connection,
             """
             SELECT
                 node_id,
@@ -77,8 +77,8 @@ def main():
         )
 
         print("\nRisk count by region:")
-        run_query(
-            connection,
+        print_query_results(
+            database_connection,
             """
             SELECT
                 region,

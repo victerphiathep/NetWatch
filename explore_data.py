@@ -1,3 +1,8 @@
+"""
+Exploring data and getting a feel for it before we do any transformations or build any models.
+"""
+
+
 from pathlib import Path
 
 import pandas as pd

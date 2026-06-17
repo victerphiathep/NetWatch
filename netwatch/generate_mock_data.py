@@ -1,12 +1,9 @@
 from datetime import datetime, timedelta
-from pathlib import Path
 import random
 
 import pandas as pd
 
-
-DATA_DIR = Path("data")
-RAW_READINGS_FILE = DATA_DIR / "mock_node_readings.csv"
+from netwatch.config import DATA_DIR, RAW_READINGS_FILE
 
 REGION_NODE_IDS = {
     "Philadelphia": ["PHL-001", "PHL-002", "PHL-003", "PHL-004"],

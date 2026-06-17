@@ -3,17 +3,13 @@ Exploring data and getting a feel for it before we do any transformations or bui
 """
 
 
-from pathlib import Path
-
 import pandas as pd
 
-
-PROJECT_ROOT = Path(__file__).parent
-DATA_FILE = PROJECT_ROOT / "data" / "mock_node_readings.csv"
+from netwatch.config import RAW_READINGS_FILE
 
 
 def main():
-    raw_readings_dataframe = pd.read_csv(DATA_FILE)
+    raw_readings_dataframe = pd.read_csv(RAW_READINGS_FILE)
 
     print("First 5 rows:")
     print(raw_readings_dataframe.head())

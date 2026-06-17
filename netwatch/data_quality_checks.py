@@ -2,14 +2,12 @@
 Run data quality checks against the raw NetWatch telemetry table.
 """
 
-from pathlib import Path
 import sqlite3
 
 import pandas as pd
 
+from netwatch.config import NETWATCH_DATABASE_FILE
 
-PROJECT_ROOT = Path(__file__).parent
-NETWATCH_DATABASE_FILE = PROJECT_ROOT / "data" / "netwatch.db"
 EXPECTED_READINGS_PER_NODE = 7 * 24
 
 

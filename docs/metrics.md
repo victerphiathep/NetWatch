@@ -107,6 +107,116 @@ critical_reading_count / total_reading_count * 100
 
 This normalizes critical events by total available readings.
 
+### peak_hour_avg_download_utilization
+
+Average downstream utilization during peak hours only.
+
+Current peak-hour definition:
+
+```text
+18:00 through 22:00
+```
+
+This helps distinguish general utilization from evening-window demand.
+
+### peak_hour_max_download_utilization
+
+Maximum downstream utilization observed during peak hours only.
+
+Use this to identify severe evening-window congestion.
+
+### peak_hour_total_reading_count
+
+Number of readings available during the peak-hour window.
+
+In the current mock dataset, each node is expected to have:
+
+```text
+7 days x 5 peak hours = 35 peak-hour readings
+```
+
+### peak_hour_critical_reading_count
+
+Number of peak-hour readings where:
+
+```text
+download_utilization_pct >= 85
+```
+
+This is especially useful for capacity planning because repeated evening critical events may indicate predictable customer-demand pressure.
+
+### first_day_avg_download_utilization
+
+Average downstream utilization for the node on the first day in the reporting window.
+
+This is used as the starting point for the simple trend calculation.
+
+### last_day_avg_download_utilization
+
+Average downstream utilization for the node on the last day in the reporting window.
+
+This is used as the ending point for the simple trend calculation.
+
+### download_utilization_change
+
+Difference between last-day average downstream utilization and first-day average downstream utilization.
+
+Formula:
+
+```text
+last_day_avg_download_utilization - first_day_avg_download_utilization
+```
+
+Unit:
+
+```text
+percentage points
+```
+
+Example:
+
+```text
+first day average = 50%
+last day average = 62%
+download_utilization_change = +12 percentage points
+```
+
+This is not a forecast. It is a simple directional signal showing whether utilization increased or decreased across the reporting window.
+
+## Anomaly Detection
+
+NetWatch currently uses a simple node-specific standard deviation rule.
+
+For each node:
+
+```text
+anomaly_threshold = node_avg_download_utilization + (2 * node_std_download_utilization)
+```
+
+A reading is flagged as an anomaly when:
+
+```text
+download_utilization_pct > anomaly_threshold
+```
+
+### anomaly_score
+
+Measures how many standard deviations the reading is above the node's average.
+
+Formula:
+
+```text
+(download_utilization_pct - node_avg_download_utilization) / node_std_download_utilization
+```
+
+Important production note:
+
+```text
+An anomaly is not automatically a network fault.
+```
+
+It means the reading is unusual compared with that node's normal behavior and should be investigated. Possible causes include real congestion, local events, rerouted traffic, telemetry issues, or one-off customer behavior.
+
 ## Risk Level
 
 `risk_level` is a node-level label used to make the summary easier to interpret.

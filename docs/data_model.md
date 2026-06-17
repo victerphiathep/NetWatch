@@ -78,21 +78,21 @@ Columns:
 ## Pipeline Flow
 
 ```text
-generate_mock_data.py
+netwatch/generate_mock_data.py
         ↓
 data/mock_node_readings.csv
         ↓
-load_to_sqlite.py
+netwatch/load_to_sqlite.py
         ↓
 raw_node_readings
         ↓
-data_quality_checks.py
+netwatch/data_quality_checks.py
         ↓
-build_node_summary.py
+netwatch/build_node_summary.py
         ↓
 node_summary
         ↓
-query_raw_data.py
+netwatch/query_raw_data.py
 ```
 
 ## Production Mapping
@@ -102,6 +102,7 @@ query_raw_data.py
 | `mock_node_readings.csv` | Raw telemetry feed or source export |
 | SQLite `netwatch.db` | Warehouse, lakehouse, Databricks, or Spark table storage |
 | `raw_node_readings` | Raw telemetry table |
-| `data_quality_checks.py` | Data quality gate or validation task |
+| `netwatch/data_quality_checks.py` | Data quality gate or validation task |
 | `node_summary` | Curated analytics/reporting table |
-| `query_raw_data.py` | Dashboard/API/reporting queries |
+| `netwatch/query_raw_data.py` | Dashboard/API/reporting queries |
+| `netwatch/api/app.py` | FastAPI backend service |

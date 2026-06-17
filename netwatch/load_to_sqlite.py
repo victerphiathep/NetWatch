@@ -5,14 +5,11 @@ load the DataFrame into a table called raw_node_readings
 print a row count
 """
 
-from pathlib import Path
 import sqlite3
 
 import pandas as pd
 
-PROJECT_ROOT = Path(__file__).parent
-RAW_READINGS_FILE = PROJECT_ROOT / "data" / "mock_node_readings.csv"
-NETWATCH_DATABASE_FILE = PROJECT_ROOT / "data" / "netwatch.db"
+from netwatch.config import NETWATCH_DATABASE_FILE, RAW_READINGS_FILE
 
 def main():
     raw_readings_dataframe = pd.read_csv(RAW_READINGS_FILE)

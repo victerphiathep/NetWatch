@@ -2,6 +2,7 @@ from io import StringIO
 import sqlite3
 
 from dash import Dash, Input, Output, State, dash_table, dcc, html
+from netwatch.dashboard import api_client
 import pandas as pd
 import plotly.express as px
 
@@ -32,13 +33,8 @@ def load_raw_readings_dataframe():
 
 
 def load_node_summary_dataframe():
-    with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
-        node_summary_dataframe = pd.read_sql_query(
-            "SELECT * FROM node_summary",
-            database_connection,
-        )
-
-    return node_summary_dataframe
+    node_summary_dataframe = api_client.fetch_node_summaries()
+    return pd.DataFrame(node_summary_dataframe)
 
 
 def load_anomaly_readings_dataframe():

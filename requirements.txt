@@ -1,1 +1,6 @@
 pandas
+plotly
+dash
+fastapi
+uvicorn
+requests

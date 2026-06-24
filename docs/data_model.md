@@ -48,6 +48,18 @@ Primary uniqueness expectation:
 node_id + timestamp should be unique
 ```
 
+## Table: anomaly_readings
+
+`anomaly_readings` stores raw readings that are unusually high compared with that node's own baseline.
+
+This is a simple local version of an operational monitoring or anomaly detection layer.
+
+Grain:
+
+```text
+One row per anomalous node reading
+```
+
 ## Table: node_summary
 
 `node_summary` stores node-level analytics derived from `raw_node_readings`.
@@ -75,24 +87,68 @@ Columns:
 | `critical_reading_pct` | float | Percentage of readings that were critical. |
 | `risk_level` | text | Node-level risk label: `normal`, `watch`, or `high_risk`. |
 
+## Package Layout
+
+```text
+netwatch/data_sources/
+    Mock upstream telemetry sources and data exploration scripts.
+
+netwatch/pipeline/
+    ETL orchestration, database loading, and data quality jobs.
+
+netwatch/analytics/
+    Transformations that create analytical tables such as anomaly readings and node summaries.
+
+netwatch/reporting/
+    SQL/reporting queries used to inspect analytical outputs.
+
+netwatch/api/
+    FastAPI backend service.
+
+netwatch/dashboard/
+    Dash frontend application.
+```
+
 ## Pipeline Flow
 
 ```text
-netwatch/generate_mock_data.py
-        ↓
+netwatch/data_sources/generate_mock_data.py
+        |
 data/mock_node_readings.csv
-        ↓
-netwatch/load_to_sqlite.py
-        ↓
+        |
+netwatch/pipeline/load_to_sqlite.py
+        |
 raw_node_readings
-        ↓
-netwatch/data_quality_checks.py
-        ↓
-netwatch/build_node_summary.py
-        ↓
+        |
+netwatch/pipeline/data_quality_checks.py
+        |
+netwatch/analytics/anomaly_detection.py
+        |
+anomaly_readings
+        |
+netwatch/analytics/build_node_summary.py
+        |
 node_summary
-        ↓
-netwatch/query_raw_data.py
+        |
+netwatch/reporting/query_raw_data.py
+```
+
+## Medallion Architecture Mapping
+
+```text
+Bronze
+    raw_node_readings
+    Raw hourly telemetry loaded from the mock source.
+
+Silver
+    quality-checked raw readings
+    anomaly_readings
+    Cleaned, validated, and enriched operational data.
+
+Gold
+    node_summary
+    region risk summaries
+    Business-facing reporting tables for dashboards, planning, APIs, and AI analysis.
 ```
 
 ## Production Mapping
@@ -101,8 +157,9 @@ netwatch/query_raw_data.py
 | --- | --- |
 | `mock_node_readings.csv` | Raw telemetry feed or source export |
 | SQLite `netwatch.db` | Warehouse, lakehouse, Databricks, or Spark table storage |
-| `raw_node_readings` | Raw telemetry table |
-| `netwatch/data_quality_checks.py` | Data quality gate or validation task |
-| `node_summary` | Curated analytics/reporting table |
-| `netwatch/query_raw_data.py` | Dashboard/API/reporting queries |
+| `raw_node_readings` | Raw telemetry or bronze table |
+| `netwatch/pipeline/data_quality_checks.py` | Data quality gate or validation task |
+| `netwatch/analytics/anomaly_detection.py` | Anomaly detection or monitoring job |
+| `node_summary` | Curated analytics/reporting or gold table |
+| `netwatch/reporting/query_raw_data.py` | Dashboard/API/reporting queries |
 | `netwatch/api/app.py` | FastAPI backend service |

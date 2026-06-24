@@ -15,3 +15,11 @@ def fetch_json(endpoint_path):
 
 def fetch_node_summaries():
     return fetch_json("/nodes")
+
+
+def fetch_raw_readings():
+    return fetch_json("/readings")
+
+
+def fetch_anomaly_readings():
+    return fetch_json("/anomalies")

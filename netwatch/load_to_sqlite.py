@@ -5,31 +5,28 @@ load the DataFrame into a table called raw_node_readings
 print a row count
 """
 
-from pathlib import Path
 import sqlite3
 
 import pandas as pd
 
-PROJECT_ROOT = Path(__file__).parent
-DATA_FILE = PROJECT_ROOT / "data" / "mock_node_readings.csv"
-DB_FILE = PROJECT_ROOT / "data" / "netwatch.db"
+from netwatch.config import NETWATCH_DATABASE_FILE, RAW_READINGS_FILE
 
 def main():
-    df = pd.read_csv(DATA_FILE)
+    raw_readings_dataframe = pd.read_csv(RAW_READINGS_FILE)
 
-    with sqlite3.connect(DB_FILE) as connection:
-        df.to_sql(
+    with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
+        raw_readings_dataframe.to_sql(
             "raw_node_readings",
-            connection,
+            database_connection,
             if_exists="replace",
             index=False,
         )
 
-        row_count = connection.execute(
+        loaded_row_count = database_connection.execute(
             "SELECT COUNT(*) FROM raw_node_readings"
         ).fetchone()[0]
 
-    print(f"Loaded {row_count} rows into {DB_FILE}")
+    print(f"Loaded {loaded_row_count} rows into {NETWATCH_DATABASE_FILE}")
     print("Table created: raw_node_readings")
 
 

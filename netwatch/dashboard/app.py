@@ -19,11 +19,7 @@ PLOTLY_DARK_TEMPLATE = "plotly_dark"
 
 
 def load_raw_readings_dataframe():
-    with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
-        raw_readings_dataframe = pd.read_sql_query(
-            "SELECT * FROM raw_node_readings",
-            database_connection,
-        )
+    raw_readings_dataframe = pd.DataFrame(api_client.fetch_raw_readings())
 
     raw_readings_dataframe["timestamp"] = pd.to_datetime(
         raw_readings_dataframe["timestamp"]
@@ -38,11 +34,8 @@ def load_node_summary_dataframe():
 
 
 def load_anomaly_readings_dataframe():
-    with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
-        anomaly_readings_dataframe = pd.read_sql_query(
-            "SELECT * FROM anomaly_readings",
-            database_connection,
-        )
+    anomaly_readings_dataframe = pd.DataFrame(
+        api_client.fetch_anomaly_readings())
 
     anomaly_readings_dataframe["timestamp"] = pd.to_datetime(
         anomaly_readings_dataframe["timestamp"]
@@ -383,7 +376,8 @@ def create_anomaly_counts_figure(anomaly_readings_dataframe):
 
 def create_metric_tiles(node_summary_dataframe):
     high_risk_node_count = len(
-        node_summary_dataframe[node_summary_dataframe["risk_level"] == "high_risk"]
+        node_summary_dataframe[node_summary_dataframe["risk_level"]
+                               == "high_risk"]
     )
     watch_node_count = len(
         node_summary_dataframe[node_summary_dataframe["risk_level"] == "watch"]
@@ -394,9 +388,11 @@ def create_metric_tiles(node_summary_dataframe):
     ).iloc[0]
 
     return [
-        create_metric_tile("High-risk nodes", high_risk_node_count, "critical"),
+        create_metric_tile("High-risk nodes",
+                           high_risk_node_count, "critical"),
         create_metric_tile("Watch nodes", watch_node_count, "watch"),
-        create_metric_tile("Highest-risk node", highest_risk_node_record["node_id"]),
+        create_metric_tile("Highest-risk node",
+                           highest_risk_node_record["node_id"]),
         create_metric_tile(
             "Max utilization",
             f"{highest_risk_node_record['max_download_utilization']:.2f}%",
@@ -490,7 +486,8 @@ def create_dashboard_app():
                         [
                             html.Section(
                                 id="overview",
-                                children=create_metric_tiles(node_summary_dataframe),
+                                children=create_metric_tiles(
+                                    node_summary_dataframe),
                                 className="metric-grid anchor-section",
                             ),
                             html.Main(
@@ -513,7 +510,8 @@ def create_dashboard_app():
                                                     anomaly_readings_dataframe,
                                                     default_node_id,
                                                 ),
-                                                config={"displayModeBar": False},
+                                                config={
+                                                    "displayModeBar": False},
                                             )
                                         ],
                                         className="panel panel-wide anchor-section",
@@ -527,7 +525,8 @@ def create_dashboard_app():
                                                     raw_readings_dataframe,
                                                     default_node_id,
                                                 ),
-                                                config={"displayModeBar": False},
+                                                config={
+                                                    "displayModeBar": False},
                                             )
                                         ],
                                         className="panel panel-wide anchor-section",
@@ -540,7 +539,8 @@ def create_dashboard_app():
                                                 figure=create_critical_counts_figure(
                                                     node_summary_dataframe
                                                 ),
-                                                config={"displayModeBar": False},
+                                                config={
+                                                    "displayModeBar": False},
                                             )
                                         ],
                                         className="panel anchor-section",
@@ -553,7 +553,8 @@ def create_dashboard_app():
                                                 figure=create_region_risk_figure(
                                                     node_summary_dataframe
                                                 ),
-                                                config={"displayModeBar": False},
+                                                config={
+                                                    "displayModeBar": False},
                                             )
                                         ],
                                         className="panel anchor-section",
@@ -566,7 +567,8 @@ def create_dashboard_app():
                                                 figure=create_anomaly_counts_figure(
                                                     anomaly_readings_dataframe
                                                 ),
-                                                config={"displayModeBar": False},
+                                                config={
+                                                    "displayModeBar": False},
                                             )
                                         ],
                                         className="panel panel-wide anchor-section",
@@ -581,13 +583,15 @@ def create_dashboard_app():
                                                     "records"
                                                 ),
                                                 columns=[
-                                                    {"name": column_name, "id": column_name}
+                                                    {"name": column_name,
+                                                        "id": column_name}
                                                     for column_name in node_summary_dataframe.columns
                                                 ],
                                                 page_size=10,
                                                 sort_action="native",
                                                 filter_action="native",
-                                                style_table={"overflowX": "auto"},
+                                                style_table={
+                                                    "overflowX": "auto"},
                                                 style_cell={
                                                     "backgroundColor": "#111827",
                                                     "border": "1px solid #263244",

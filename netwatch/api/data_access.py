@@ -23,6 +23,16 @@ def fetch_one_row(sql_query, query_parameters=()):
     return rows[0]
 
 
+def fetch_raw_readings():
+    return fetch_all_rows(
+        """
+        SELECT *
+        FROM raw_node_readings
+        ORDER BY timestamp, node_id;
+        """
+    )
+
+
 def fetch_node_summaries():
     return fetch_all_rows(
         """
@@ -63,6 +73,15 @@ def fetch_node_readings(node_id, limit):
         (node_id, limit),
     )
 
+def fetch_anomaly_readings():
+    return fetch_all_rows(
+        """
+        SELECT *
+        FROM anomaly_readings
+        ORDER BY anomaly_score DESC;
+        """
+    )
+
 
 def fetch_node_anomalies(node_id):
     return fetch_all_rows(
@@ -75,6 +94,7 @@ def fetch_node_anomalies(node_id):
         (node_id,),
     )
 
+
 def fetch_regions():
     return fetch_all_rows(
         """
@@ -83,6 +103,7 @@ def fetch_regions():
         ORDER BY region;
         """
     )
+
 
 def fetch_region_risk_summary():
     return fetch_all_rows(

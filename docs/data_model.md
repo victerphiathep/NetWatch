@@ -10,13 +10,47 @@ Local database:
 data/netwatch.db
 ```
 
-This SQLite database is a local stand-in for a production data warehouse, lakehouse, or Databricks/Spark-managed table environment.
+SQLite is our local stand-in for a production warehouse, lakehouse, or Databricks/Spark-managed table environment.
 
-## Table: raw_node_readings
+## Medallion Architecture
 
-`raw_node_readings` stores the raw hourly utilization telemetry used by the pipeline.
+NetWatch now uses Databricks-style medallion table names locally.
 
-In a Comcast-like production environment, this table would map to raw or lightly cleaned telemetry collected from network devices, monitoring platforms, or capacity systems.
+```text
+Bronze
+    bronze_raw_node_readings
+    Raw hourly telemetry loaded from the mock source.
+
+Silver
+    silver_validated_node_readings
+    Quality-checked telemetry that passed validation.
+
+    silver_anomaly_readings
+    Enriched operational data containing unusual utilization readings.
+
+Gold
+    gold_node_summary
+    Business-facing reporting table used by the API, dashboard, planning views, and future AI analysis.
+
+    gold_node_forecast
+    Business-facing forecast table used to identify nodes that may cross a critical utilization threshold.
+```
+
+Compatibility tables still exist:
+
+```text
+raw_node_readings
+anomaly_readings
+node_summary
+```
+
+Those older names are refreshed by the pipeline so previous scripts and learning notes still work.
+
+## Table: bronze_raw_node_readings
+
+`bronze_raw_node_readings` stores the raw hourly utilization telemetry loaded from `data/mock_node_readings.csv`.
+
+In a Comcast-like production environment, this maps to raw or lightly cleaned telemetry collected from network devices, monitoring platforms, or capacity systems.
 
 Grain:
 
@@ -24,7 +58,7 @@ Grain:
 One row per node per timestamp
 ```
 
-Expected volume in the mock dataset:
+Expected volume:
 
 ```text
 10 nodes x 7 days x 24 hours = 1,680 rows
@@ -48,9 +82,25 @@ Primary uniqueness expectation:
 node_id + timestamp should be unique
 ```
 
-## Table: anomaly_readings
+## Table: silver_validated_node_readings
 
-`anomaly_readings` stores raw readings that are unusually high compared with that node's own baseline.
+`silver_validated_node_readings` stores telemetry that passed the local data quality checks.
+
+Current checks:
+
+```text
+No missing values
+No duplicate node/timestamp readings
+Download utilization is between 0 and 100
+Upload utilization is between 0 and 100
+Each node has the expected number of readings
+```
+
+In production, Silver tables usually include cleaned, standardized, deduplicated, and enriched data that downstream systems can trust more than raw source data.
+
+## Table: silver_anomaly_readings
+
+`silver_anomaly_readings` stores readings that are unusually high compared with that node's own baseline.
 
 This is a simple local version of an operational monitoring or anomaly detection layer.
 
@@ -60,11 +110,11 @@ Grain:
 One row per anomalous node reading
 ```
 
-## Table: node_summary
+## Table: gold_node_summary
 
-`node_summary` stores node-level analytics derived from `raw_node_readings`.
+`gold_node_summary` stores node-level analytics derived from `silver_validated_node_readings`.
 
-This is the reporting/analytics layer. Dashboards, APIs, planning tools, and AI assistants should generally read from this table instead of recomputing from raw telemetry every time.
+This is the reporting and planning layer. Dashboards, APIs, planning tools, and AI assistants should generally read from Gold tables instead of recomputing from raw telemetry every time.
 
 Grain:
 
@@ -72,7 +122,7 @@ Grain:
 One row per node
 ```
 
-Columns:
+Selected columns:
 
 | Column | Type | Description |
 | --- | --- | --- |
@@ -86,6 +136,32 @@ Columns:
 | `critical_reading_count` | integer | Number of readings where downstream utilization was at least 85%. |
 | `critical_reading_pct` | float | Percentage of readings that were critical. |
 | `risk_level` | text | Node-level risk label: `normal`, `watch`, or `high_risk`. |
+
+## Table: gold_node_forecast
+
+`gold_node_forecast` stores simple capacity forecasts derived from `silver_validated_node_readings`.
+
+This is not machine learning yet. It is a first planning model based on daily average utilization change.
+
+Grain:
+
+```text
+One row per node
+```
+
+Selected columns:
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `node_id` | text | Unique identifier for the network node. |
+| `region` | text | Region or market the node belongs to. |
+| `first_day_avg_download_utilization` | float | First daily average in the observed window. |
+| `last_day_avg_download_utilization` | float | Last daily average in the observed window. |
+| `daily_download_utilization_change` | float | Estimated daily utilization change in percentage points. |
+| `projected_7_day_download_utilization` | float | Projected utilization seven days after the last observed day. |
+| `projected_30_day_download_utilization` | float | Projected utilization thirty days after the last observed day. |
+| `days_until_critical` | integer/null | Estimated days until the node reaches 85% average utilization. |
+| `forecast_risk_level` | text | Forecast label: `forecast_high_risk`, `forecast_watch`, or `forecast_stable`. |
 
 ## Package Layout
 
@@ -118,37 +194,25 @@ data/mock_node_readings.csv
         |
 netwatch/pipeline/load_to_sqlite.py
         |
-raw_node_readings
+bronze_raw_node_readings
         |
 netwatch/pipeline/data_quality_checks.py
         |
+silver_validated_node_readings
+        |
 netwatch/analytics/anomaly_detection.py
         |
-anomaly_readings
+silver_anomaly_readings
         |
 netwatch/analytics/build_node_summary.py
         |
-node_summary
+gold_node_summary
         |
-netwatch/reporting/query_raw_data.py
-```
-
-## Medallion Architecture Mapping
-
-```text
-Bronze
-    raw_node_readings
-    Raw hourly telemetry loaded from the mock source.
-
-Silver
-    quality-checked raw readings
-    anomaly_readings
-    Cleaned, validated, and enriched operational data.
-
-Gold
-    node_summary
-    region risk summaries
-    Business-facing reporting tables for dashboards, planning, APIs, and AI analysis.
+netwatch/analytics/build_node_forecast.py
+        |
+gold_node_forecast
+        |
+FastAPI + Dash dashboard
 ```
 
 ## Production Mapping
@@ -157,9 +221,11 @@ Gold
 | --- | --- |
 | `mock_node_readings.csv` | Raw telemetry feed or source export |
 | SQLite `netwatch.db` | Warehouse, lakehouse, Databricks, or Spark table storage |
-| `raw_node_readings` | Raw telemetry or bronze table |
+| `bronze_raw_node_readings` | Bronze/raw telemetry table |
+| `silver_validated_node_readings` | Silver validated telemetry table |
+| `silver_anomaly_readings` | Silver enriched monitoring table |
+| `gold_node_summary` | Gold reporting/planning table |
+| `gold_node_forecast` | Gold forecasting/planning table |
 | `netwatch/pipeline/data_quality_checks.py` | Data quality gate or validation task |
 | `netwatch/analytics/anomaly_detection.py` | Anomaly detection or monitoring job |
-| `node_summary` | Curated analytics/reporting or gold table |
-| `netwatch/reporting/query_raw_data.py` | Dashboard/API/reporting queries |
 | `netwatch/api/app.py` | FastAPI backend service |

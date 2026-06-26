@@ -2,7 +2,12 @@ import sqlite3
 
 import pandas as pd
 
-from netwatch.config import NETWATCH_DATABASE_FILE
+from netwatch.config import (
+    LEGACY_ANOMALY_READINGS_TABLE,
+    NETWATCH_DATABASE_FILE,
+    SILVER_ANOMALY_READINGS_TABLE,
+    SILVER_VALIDATED_READINGS_TABLE,
+)
 
 
 ANOMALY_STD_DEV_MULTIPLIER = 2
@@ -62,7 +67,7 @@ def detect_download_utilization_anomalies(raw_readings_dataframe):
 def main():
     with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
         raw_readings_dataframe = pd.read_sql_query(
-            "SELECT * FROM raw_node_readings",
+            f"SELECT * FROM {SILVER_VALIDATED_READINGS_TABLE}",
             database_connection,
         )
 
@@ -71,14 +76,21 @@ def main():
         )
 
         anomaly_readings_dataframe.to_sql(
-            "anomaly_readings",
+            SILVER_ANOMALY_READINGS_TABLE,
+            database_connection,
+            if_exists="replace",
+            index=False,
+        )
+        anomaly_readings_dataframe.to_sql(
+            LEGACY_ANOMALY_READINGS_TABLE,
             database_connection,
             if_exists="replace",
             index=False,
         )
 
     print(f"Detected {len(anomaly_readings_dataframe)} anomaly readings")
-    print("Table created: anomaly_readings")
+    print(f"Silver table created: {SILVER_ANOMALY_READINGS_TABLE}")
+    print(f"Compatibility table refreshed: {LEGACY_ANOMALY_READINGS_TABLE}")
     print(anomaly_readings_dataframe.head())
 
 

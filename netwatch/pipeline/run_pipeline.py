@@ -20,6 +20,10 @@ PIPELINE_STEPS = [
         [sys.executable, "-m", "netwatch.analytics.build_node_summary"],
     ),
     (
+        "Build node forecast",
+        [sys.executable, "-m", "netwatch.analytics.build_node_forecast"],
+    ),
+    (
         "Query reporting views",
         [sys.executable, "-m", "netwatch.reporting.query_raw_data"],
     ),

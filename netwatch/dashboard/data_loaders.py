@@ -30,6 +30,11 @@ def load_anomaly_readings_dataframe():
     return anomaly_readings_dataframe
 
 
+def load_node_forecast_dataframe():
+    node_forecast_dataframe = api_client.fetch_node_forecasts()
+    return pd.DataFrame(node_forecast_dataframe)
+
+
 def serialize_dataframe(dataframe):
     return dataframe.to_json(orient="split", date_format="iso")
 
@@ -42,5 +47,11 @@ def load_dashboard_data():
     raw_readings_dataframe = load_raw_readings_dataframe()
     node_summary_dataframe = load_node_summary_dataframe()
     anomaly_readings_dataframe = load_anomaly_readings_dataframe()
+    node_forecast_dataframe = load_node_forecast_dataframe()
 
-    return raw_readings_dataframe, node_summary_dataframe, anomaly_readings_dataframe
+    return (
+        raw_readings_dataframe,
+        node_summary_dataframe,
+        anomaly_readings_dataframe,
+        node_forecast_dataframe,
+    )

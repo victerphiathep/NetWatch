@@ -1,15 +1,18 @@
 from dash import dash_table, dcc, html
 
 from netwatch.dashboard.components import (
+    create_forecast_metric_tiles,
     create_metric_tiles,
     create_node_options,
     create_selected_node_detail_panel,
+    create_selected_node_forecast_panel,
 )
 from netwatch.dashboard.data_loaders import serialize_dataframe
 from netwatch.dashboard.figures import (
     create_anomaly_counts_figure,
     create_critical_counts_figure,
     create_daily_average_trend_figure,
+    create_forecast_projection_figure,
     create_node_utilization_figure,
     create_region_risk_figure,
 )
@@ -19,6 +22,7 @@ def create_layout(
     raw_readings_dataframe,
     node_summary_dataframe,
     anomaly_readings_dataframe,
+    node_forecast_dataframe,
     default_node_id,
 ):
     return html.Div(
@@ -34,6 +38,10 @@ def create_layout(
             dcc.Store(
                 id="anomaly-readings-store",
                 data=serialize_dataframe(anomaly_readings_dataframe),
+            ),
+            dcc.Store(
+                id="node-forecast-store",
+                data=serialize_dataframe(node_forecast_dataframe),
             ),
             html.Header(
                 [
@@ -88,6 +96,7 @@ def create_layout(
                             html.A("Node Ranking", href="#node-ranking"),
                             html.A("Regional Risk", href="#regional-risk"),
                             html.A("Anomalies", href="#anomalies"),
+                            html.A("Forecast", href="#forecast"),
                             html.A("Summary Table", href="#summary-table"),
                         ],
                         className="dashboard-nav",
@@ -187,6 +196,34 @@ def create_layout(
                                         className="panel panel-wide anchor-section",
                                     ),
                                     html.Section(
+                                        id="forecast",
+                                        children=[
+                                            html.Div(
+                                                id="forecast-metric-grid",
+                                                children=create_forecast_metric_tiles(
+                                                    node_forecast_dataframe
+                                                ),
+                                                className="metric-grid forecast-metric-grid",
+                                            ),
+                                            html.Div(
+                                                id="selected-node-forecast-panel",
+                                                children=create_selected_node_forecast_panel(
+                                                    node_forecast_dataframe,
+                                                    default_node_id,
+                                                ),
+                                                className="forecast-panel-spacing",
+                                            ),
+                                            dcc.Graph(
+                                                id="forecast-projection-chart",
+                                                figure=create_forecast_projection_figure(
+                                                    node_forecast_dataframe
+                                                ),
+                                                config={"displayModeBar": False},
+                                            ),
+                                        ],
+                                        className="panel panel-wide anchor-section",
+                                    ),
+                                    html.Section(
                                         id="summary-table",
                                         children=[
                                             html.H2("Node Summary"),
@@ -201,6 +238,43 @@ def create_layout(
                                                         "id": column_name,
                                                     }
                                                     for column_name in node_summary_dataframe.columns
+                                                ],
+                                                page_size=10,
+                                                sort_action="native",
+                                                filter_action="native",
+                                                style_table={"overflowX": "auto"},
+                                                style_cell={
+                                                    "backgroundColor": "#111827",
+                                                    "border": "1px solid #263244",
+                                                    "color": "#dbeafe",
+                                                    "fontFamily": "Arial",
+                                                    "fontSize": 13,
+                                                    "padding": "9px",
+                                                    "textAlign": "left",
+                                                },
+                                                style_header={
+                                                    "backgroundColor": "#1f2937",
+                                                    "border": "1px solid #334155",
+                                                    "color": "#f8fafc",
+                                                    "fontWeight": "bold",
+                                                },
+                                                style_filter={
+                                                    "backgroundColor": "#0f172a",
+                                                    "color": "#dbeafe",
+                                                },
+                                            ),
+                                            html.H2("Node Forecast"),
+                                            dash_table.DataTable(
+                                                id="node-forecast-table",
+                                                data=node_forecast_dataframe.round(2).to_dict(
+                                                    "records"
+                                                ),
+                                                columns=[
+                                                    {
+                                                        "name": column_name,
+                                                        "id": column_name,
+                                                    }
+                                                    for column_name in node_forecast_dataframe.columns
                                                 ],
                                                 page_size=10,
                                                 sort_action="native",

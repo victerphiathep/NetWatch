@@ -42,3 +42,18 @@ def get_node_anomalies(node_id: str):
         raise HTTPException(status_code=404, detail="Node not found")
 
     return data_access.fetch_node_anomalies(node_id)
+
+
+@router.get("/{node_id}/forecast")
+def get_node_forecast(node_id: str):
+    node_summary = data_access.fetch_node_summary(node_id)
+
+    if node_summary is None:
+        raise HTTPException(status_code=404, detail="Node not found")
+
+    node_forecast = data_access.fetch_node_forecast(node_id)
+
+    if node_forecast is None:
+        raise HTTPException(status_code=404, detail="Node forecast not found")
+
+    return node_forecast

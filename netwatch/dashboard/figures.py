@@ -1,6 +1,10 @@
 import plotly.express as px
 
-from netwatch.dashboard.constants import PLOTLY_DARK_TEMPLATE, RISK_COLOR_MAP
+from netwatch.dashboard.constants import (
+    FORECAST_RISK_COLOR_MAP,
+    PLOTLY_DARK_TEMPLATE,
+    RISK_COLOR_MAP,
+)
 
 
 def apply_dark_chart_layout(plotly_figure):
@@ -182,3 +186,32 @@ def create_anomaly_counts_figure(anomaly_readings_dataframe):
     )
 
     return apply_dark_chart_layout(anomaly_counts_figure)
+
+
+def create_forecast_projection_figure(node_forecast_dataframe):
+    forecast_projection_figure = px.bar(
+        node_forecast_dataframe.sort_values(
+            by="projected_30_day_download_utilization",
+            ascending=False,
+        ),
+        x="node_id",
+        y="projected_30_day_download_utilization",
+        color="forecast_risk_level",
+        color_discrete_map=FORECAST_RISK_COLOR_MAP,
+        title="30-Day Projected Download Utilization By Node",
+    )
+
+    forecast_projection_figure.add_hline(
+        y=85,
+        line_dash="dash",
+        line_color="#ff5d5d",
+        annotation_text="Critical threshold",
+        annotation_font_color="#fecaca",
+    )
+
+    forecast_projection_figure.update_layout(
+        xaxis_title="Node",
+        yaxis_title="Projected download utilization (%)",
+    )
+
+    return apply_dark_chart_layout(forecast_projection_figure)

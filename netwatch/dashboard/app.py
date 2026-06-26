@@ -12,6 +12,7 @@ def create_dashboard_app():
         raw_readings_dataframe,
         node_summary_dataframe,
         anomaly_readings_dataframe,
+        node_forecast_dataframe,
     ) = load_dashboard_data()
     default_node_id = choose_default_node_id(node_summary_dataframe)
 
@@ -21,6 +22,7 @@ def create_dashboard_app():
         raw_readings_dataframe,
         node_summary_dataframe,
         anomaly_readings_dataframe,
+        node_forecast_dataframe,
         default_node_id,
     )
     register_callbacks(dashboard_app)

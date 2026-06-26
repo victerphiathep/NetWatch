@@ -23,3 +23,7 @@ def fetch_raw_readings():
 
 def fetch_anomaly_readings():
     return fetch_json("/anomalies")
+
+
+def fetch_node_forecasts():
+    return fetch_json("/forecasts")

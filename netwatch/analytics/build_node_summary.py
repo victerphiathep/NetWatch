@@ -35,7 +35,13 @@ import sqlite3
 
 import pandas as pd
 
-from netwatch.config import NETWATCH_DATABASE_FILE, NODE_SUMMARY_FILE
+from netwatch.config import (
+    GOLD_NODE_SUMMARY_TABLE,
+    LEGACY_NODE_SUMMARY_TABLE,
+    NETWATCH_DATABASE_FILE,
+    NODE_SUMMARY_FILE,
+    SILVER_VALIDATED_READINGS_TABLE,
+)
 
 RISK_LEVEL_SORT_ORDER = {
     "high_risk": 0,
@@ -64,7 +70,7 @@ def classify_node_risk(node_summary_record):
 def main():
     with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
         raw_readings_dataframe = pd.read_sql_query(
-            "SELECT * FROM raw_node_readings",
+            f"SELECT * FROM {SILVER_VALIDATED_READINGS_TABLE}",
             database_connection,
         )
 
@@ -224,7 +230,13 @@ def main():
 
     with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
         node_summary_dataframe.to_sql(
-            "node_summary",
+            GOLD_NODE_SUMMARY_TABLE,
+            database_connection,
+            if_exists="replace",
+            index=False,
+        )
+        node_summary_dataframe.to_sql(
+            LEGACY_NODE_SUMMARY_TABLE,
             database_connection,
             if_exists="replace",
             index=False,
@@ -234,6 +246,8 @@ def main():
 
     print(node_summary_dataframe)
     print(f"\nSaved node summary to {NODE_SUMMARY_FILE}")
+    print(f"Gold table created: {GOLD_NODE_SUMMARY_TABLE}")
+    print(f"Compatibility table refreshed: {LEGACY_NODE_SUMMARY_TABLE}")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,12 @@ import sqlite3
 
 import pandas as pd
 
-from netwatch.config import NETWATCH_DATABASE_FILE
+from netwatch.config import (
+    BRONZE_RAW_READINGS_TABLE,
+    LEGACY_RAW_READINGS_TABLE,
+    NETWATCH_DATABASE_FILE,
+    SILVER_VALIDATED_READINGS_TABLE,
+)
 
 EXPECTED_READINGS_PER_NODE = 7 * 24
 
@@ -112,7 +117,7 @@ def run_quality_checks(raw_readings_dataframe):
 def main():
     with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
         raw_readings_dataframe = pd.read_sql_query(
-            "SELECT * FROM raw_node_readings",
+            f"SELECT * FROM {BRONZE_RAW_READINGS_TABLE}",
             database_connection,
         )
 
@@ -129,7 +134,22 @@ def main():
             print(f"- {failure_message}")
         raise SystemExit(1)
 
+    with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
+        raw_readings_dataframe.to_sql(
+            SILVER_VALIDATED_READINGS_TABLE,
+            database_connection,
+            if_exists="replace",
+            index=False,
+        )
+        raw_readings_dataframe.to_sql(
+            LEGACY_RAW_READINGS_TABLE,
+            database_connection,
+            if_exists="replace",
+            index=False,
+        )
+
     print("\nData quality status: PASSED")
+    print(f"Silver table created: {SILVER_VALIDATED_READINGS_TABLE}")
 
 
 if __name__ == "__main__":

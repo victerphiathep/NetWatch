@@ -54,3 +54,15 @@ Run the full local pipeline:
 ```powershell
 python -m netwatch.pipeline.run_pipeline
 ```
+
+## Local Medallion Tables
+
+NetWatch uses SQLite as a local stand-in for Databricks-style lakehouse tables:
+
+```text
+Bronze: bronze_raw_node_readings
+Silver: silver_validated_node_readings, silver_anomaly_readings
+Gold:   gold_node_summary
+```
+
+The API and dashboard read from the medallion tables. Compatibility tables with the original names are still refreshed for older learning scripts.

@@ -6,17 +6,30 @@ NetWatch includes a FastAPI backend service that exposes capacity analytics data
 
 The API is a contract between systems.
 
-Instead of every consumer reading SQLite directly, clients can ask the API for data:
+Instead of every consumer reading SQLite directly, clients ask the API for data:
 
 ```text
-SQLite tables
-        ↓
+SQLite medallion tables
+        |
 FastAPI service
-        ↓
+        |
 dashboard, frontend, automation, AI/RAG tools
 ```
 
-In a production environment, SQLite would likely be replaced by a warehouse, lakehouse, Databricks table, or another internal data platform.
+In production, SQLite would likely be replaced by a warehouse, lakehouse, Databricks table, or another internal data platform.
+
+## Data Contract
+
+The API reads from consumer-ready medallion layers:
+
+```text
+Detailed telemetry endpoints -> silver_validated_node_readings
+Anomaly endpoints            -> silver_anomaly_readings
+Summary endpoints            -> gold_node_summary
+Forecast endpoints           -> gold_node_forecast
+```
+
+Bronze tables are for ingestion and pipeline debugging, not normal dashboard consumption.
 
 ## Run The API
 
@@ -42,9 +55,7 @@ Use this to verify the API is running.
 
 ### GET /nodes
 
-Returns all node summary records.
-
-This is the API version of reading from the `node_summary` analytics table.
+Returns all node summary records from `gold_node_summary`.
 
 ### GET /nodes/{node_id}
 
@@ -56,9 +67,15 @@ Example:
 GET /nodes/CHI-003
 ```
 
+### GET /readings
+
+Returns all validated Silver readings.
+
+The dashboard uses this for full-page chart state.
+
 ### GET /nodes/{node_id}/readings
 
-Returns raw readings for one node.
+Returns validated Silver readings for one node.
 
 Optional query parameter:
 
@@ -72,6 +89,24 @@ Example:
 GET /nodes/CHI-003/readings?limit=24
 ```
 
+### GET /anomalies
+
+Returns all anomaly readings from `silver_anomaly_readings`.
+
+### GET /forecasts
+
+Returns all node forecast records from `gold_node_forecast`.
+
+### GET /forecasts/{node_id}
+
+Returns one node forecast record.
+
+Example:
+
+```text
+GET /forecasts/CHI-003
+```
+
 ### GET /nodes/{node_id}/anomalies
 
 Returns anomaly readings for one node.
@@ -82,6 +117,20 @@ Example:
 GET /nodes/CHI-003/anomalies
 ```
 
+### GET /nodes/{node_id}/forecast
+
+Returns one node forecast record through the node resource path.
+
+Example:
+
+```text
+GET /nodes/CHI-003/forecast
+```
+
+### GET /regions
+
+Returns the region list from `gold_node_summary`.
+
 ### GET /regions/risk-summary
 
 Returns node risk counts grouped by region and risk level.
@@ -91,9 +140,11 @@ Returns node risk counts grouped by region and risk level.
 | NetWatch | Production Equivalent |
 | --- | --- |
 | FastAPI app | Internal backend service or microservice |
-| `/nodes` endpoint | Capacity summary API |
-| `/nodes/{node_id}/readings` endpoint | Node telemetry detail API |
-| `/nodes/{node_id}/anomalies` endpoint | Anomaly investigation API |
+| `/nodes` endpoint | Gold capacity summary API |
+| `/readings` endpoint | Silver telemetry detail API |
+| `/nodes/{node_id}/readings` endpoint | Filtered Silver telemetry detail API |
+| `/anomalies` endpoint | Silver anomaly monitoring API |
+| `/forecasts` endpoint | Gold capacity forecasting API |
 | `/regions/risk-summary` endpoint | Regional reporting API |
 | `/docs` | OpenAPI/Swagger documentation |
 

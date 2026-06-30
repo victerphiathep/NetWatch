@@ -269,3 +269,67 @@ known outages or maintenance
 ```
 
 Real systems may also calculate risk using rolling windows, percentile metrics, trend slopes, anomaly detection, or ML forecasting.
+
+## Forecast Metrics
+
+NetWatch currently uses a simple trend-based forecast.
+
+This is intentionally basic:
+
+```text
+daily_download_utilization_change =
+    (last_day_avg_download_utilization - first_day_avg_download_utilization)
+    / observed_day_count
+```
+
+### projected_7_day_download_utilization
+
+Estimated average downstream utilization seven days after the last observed day.
+
+Formula:
+
+```text
+last_day_avg_download_utilization + (daily_download_utilization_change * 7)
+```
+
+### projected_30_day_download_utilization
+
+Estimated average downstream utilization thirty days after the last observed day.
+
+Formula:
+
+```text
+last_day_avg_download_utilization + (daily_download_utilization_change * 30)
+```
+
+### days_until_critical
+
+Estimated number of days until the node reaches the critical average utilization threshold.
+
+Current threshold:
+
+```text
+85%
+```
+
+If utilization is flat or decreasing, this value is empty because the simple trend does not predict a critical crossing.
+
+### forecast_risk_level
+
+Rules:
+
+```text
+forecast_high_risk:
+    already at or above 85%
+    OR projected to cross 85% within 7 days
+
+forecast_watch:
+    projected to cross 85% within 30 days
+
+forecast_stable:
+    no projected crossing within 30 days
+```
+
+Production note:
+
+This simple model is a learning step. A real capacity planning system might use rolling windows, seasonal patterns, percentile utilization, customer growth, planned upgrades, outage context, and ML forecasting models.

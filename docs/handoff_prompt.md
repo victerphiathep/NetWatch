@@ -49,13 +49,16 @@ Important files:
 
 ```text
 netwatch/config.py
-netwatch/generate_mock_data.py
-netwatch/explore_data.py
-netwatch/load_to_sqlite.py
-netwatch/data_quality_checks.py
-netwatch/query_raw_data.py
-netwatch/build_node_summary.py
-netwatch/run_pipeline.py
+netwatch/data_sources/generate_mock_data.py
+netwatch/data_sources/explore_data.py
+netwatch/pipeline/load_to_sqlite.py
+netwatch/pipeline/data_quality_checks.py
+netwatch/pipeline/run_pipeline.py
+netwatch/analytics/anomaly_detection.py
+netwatch/analytics/build_node_summary.py
+netwatch/reporting/query_raw_data.py
+netwatch/api/app.py
+netwatch/dashboard/app.py
 requirements.txt
 README.md
 docs/pandas_reference.md
@@ -164,13 +167,13 @@ warehouse/Spark/Databricks tables in a Comcast-like environment
 
 ## Current ETL State
 
-`netwatch/load_to_sqlite.py` loads `data/mock_node_readings.csv` into SQLite table:
+`netwatch/pipeline/load_to_sqlite.py` loads `data/mock_node_readings.csv` into SQLite table:
 
 ```text
 raw_node_readings
 ```
 
-`netwatch/build_node_summary.py` reads from SQLite table:
+`netwatch/analytics/build_node_summary.py` reads from SQLite table:
 
 ```text
 raw_node_readings
@@ -218,13 +221,21 @@ The code now lives in a package-style structure:
 ```text
 netwatch/
     config.py
-    generate_mock_data.py
-    load_to_sqlite.py
-    data_quality_checks.py
-    build_node_summary.py
-    query_raw_data.py
-    run_pipeline.py
-    explore_data.py
+    data_sources/
+        generate_mock_data.py
+        explore_data.py
+    pipeline/
+        load_to_sqlite.py
+        data_quality_checks.py
+        run_pipeline.py
+    analytics/
+        anomaly_detection.py
+        build_node_summary.py
+    reporting/
+        query_raw_data.py
+    api/
+    dashboard/
+    visualization/
 data/
 docs/
 ```
@@ -248,13 +259,17 @@ Start next session by doing these:
 From the `NetWatch` directory:
 
 ```powershell
-python -m netwatch.generate_mock_data
-python -m netwatch.load_to_sqlite
-python -m netwatch.data_quality_checks
-python -m netwatch.build_node_summary
-python -m netwatch.query_raw_data
-python -m netwatch.run_pipeline
+python -m netwatch.data_sources.generate_mock_data
+python -m netwatch.pipeline.load_to_sqlite
+python -m netwatch.pipeline.data_quality_checks
+python -m netwatch.analytics.anomaly_detection
+python -m netwatch.analytics.build_node_summary
+python -m netwatch.reporting.query_raw_data
+python -m netwatch.pipeline.run_pipeline
 ```
+
+Compatibility wrappers still exist, so older commands such as
+`python -m netwatch.run_pipeline` also work.
 
 Install dependencies:
 
@@ -262,10 +277,15 @@ Install dependencies:
 python -m pip install -r requirements.txt
 ```
 
-Current `requirements.txt` only contains:
+Current `requirements.txt` contains:
 
 ```text
 pandas
+plotly
+dash
+fastapi
+uvicorn
+requests
 ```
 
 ## Important Teaching Context

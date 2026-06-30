@@ -3,13 +3,18 @@ import sqlite3
 import pandas as pd
 import plotly.express as px
 
-from netwatch.config import CHARTS_DIR, NETWATCH_DATABASE_FILE
+from netwatch.config import (
+    BRONZE_RAW_READINGS_TABLE,
+    CHARTS_DIR,
+    GOLD_NODE_SUMMARY_TABLE,
+    NETWATCH_DATABASE_FILE,
+)
 
 
 def load_raw_readings_dataframe():
     with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
         raw_readings_dataframe = pd.read_sql_query(
-            "SELECT * FROM raw_node_readings",
+            f"SELECT * FROM {BRONZE_RAW_READINGS_TABLE}",
             database_connection,
         )
 
@@ -23,7 +28,7 @@ def load_raw_readings_dataframe():
 def load_node_summary_dataframe():
     with sqlite3.connect(NETWATCH_DATABASE_FILE) as database_connection:
         node_summary_dataframe = pd.read_sql_query(
-            "SELECT * FROM node_summary",
+            f"SELECT * FROM {GOLD_NODE_SUMMARY_TABLE}",
             database_connection,
         )
 

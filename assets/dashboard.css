@@ -285,10 +285,37 @@ html {
     color: #bbf7d0;
 }
 
+.risk-pill-forecast_high_risk {
+    background: rgba(255, 93, 93, 0.16);
+    border: 1px solid rgba(255, 93, 93, 0.72);
+    color: #fecaca;
+}
+
+.risk-pill-forecast_watch {
+    background: rgba(244, 196, 48, 0.16);
+    border: 1px solid rgba(244, 196, 48, 0.7);
+    color: #fde68a;
+}
+
+.risk-pill-forecast_stable {
+    background: rgba(66, 211, 146, 0.14);
+    border: 1px solid rgba(66, 211, 146, 0.58);
+    color: #bbf7d0;
+}
+
+.forecast-metric-grid,
+.forecast-panel-spacing {
+    margin-bottom: 18px;
+}
+
 .detail-grid {
     display: grid;
     gap: 12px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.forecast-detail-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .detail-item,
@@ -330,7 +357,8 @@ html {
     .control-group,
     .metric-grid,
     .dashboard-grid,
-    .detail-grid {
+    .detail-grid,
+    .forecast-detail-grid {
         grid-template-columns: 1fr;
     }
 

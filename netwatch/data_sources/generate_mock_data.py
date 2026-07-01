@@ -11,6 +11,59 @@ REGION_NODE_IDS = {
     "Chicago": ["CHI-001", "CHI-002", "CHI-003"],
 }
 
+NODE_UTILIZATION_PROFILES = {
+    "PHL-001": {
+        "starting_utilization": 48,
+        "daily_utilization_growth": 0.2,
+        "noise_range": 4,
+    },
+    "PHL-002": {
+        "starting_utilization": 52,
+        "daily_utilization_growth": 1.0,
+        "noise_range": 4,
+    },
+    "PHL-003": {
+        "starting_utilization": 57,
+        "daily_utilization_growth": 2.4,
+        "noise_range": 3,
+    },
+    "PHL-004": {
+        "starting_utilization": 60,
+        "daily_utilization_growth": -0.8,
+        "noise_range": 4,
+    },
+    "NYC-001": {
+        "starting_utilization": 62,
+        "daily_utilization_growth": 2.8,
+        "noise_range": 3,
+    },
+    "NYC-002": {
+        "starting_utilization": 50,
+        "daily_utilization_growth": 0.5,
+        "noise_range": 4,
+    },
+    "NYC-003": {
+        "starting_utilization": 69,
+        "daily_utilization_growth": 0.7,
+        "noise_range": 5,
+    },
+    "CHI-001": {
+        "starting_utilization": 45,
+        "daily_utilization_growth": 0.0,
+        "noise_range": 4,
+    },
+    "CHI-002": {
+        "starting_utilization": 55,
+        "daily_utilization_growth": 1.8,
+        "noise_range": 3,
+    },
+    "CHI-003": {
+        "starting_utilization": 66,
+        "daily_utilization_growth": 2.2,
+        "noise_range": 3,
+    },
+}
+
 
 def classify_reading_status(download_utilization_pct):
     if download_utilization_pct >= 85:
@@ -22,12 +75,21 @@ def classify_reading_status(download_utilization_pct):
 
 def calculate_peak_hour_utilization_boost(hour):
     if 18 <= hour <= 22:
-        return 25
+        return 18
     if 12 <= hour <= 17:
-        return 12
+        return 9
     if 6 <= hour <= 11:
-        return 8
+        return 5
     return 0
+
+
+def calculate_node_baseline_utilization(node_id, day_index):
+    node_utilization_profile = NODE_UTILIZATION_PROFILES[node_id]
+
+    return (
+        node_utilization_profile["starting_utilization"]
+        + (node_utilization_profile["daily_utilization_growth"] * day_index)
+    )
 
 
 def generate_mock_node_readings():
@@ -39,22 +101,30 @@ def generate_mock_node_readings():
 
     for hour_offset in range(days_to_generate * 24):
         timestamp = start_time + timedelta(hours=hour_offset)
+        day_index = hour_offset // 24
 
         for region, node_ids in REGION_NODE_IDS.items():
             for node_id in node_ids:
-                base_utilization = random.uniform(25, 65)
+                node_utilization_profile = NODE_UTILIZATION_PROFILES[node_id]
+                base_utilization = calculate_node_baseline_utilization(
+                    node_id,
+                    day_index,
+                )
                 hourly_utilization_boost = calculate_peak_hour_utilization_boost(
                     timestamp.hour
                 )
-                utilization_noise = random.uniform(-5, 5)
+                utilization_noise = random.uniform(
+                    -node_utilization_profile["noise_range"],
+                    node_utilization_profile["noise_range"],
+                )
 
+                raw_download_utilization_pct = (
+                    base_utilization
+                    + hourly_utilization_boost
+                    + utilization_noise
+                )
                 download_utilization_pct = round(
-                    min(
-                        base_utilization
-                        + hourly_utilization_boost
-                        + utilization_noise,
-                        100,
-                    ),
+                    max(0, min(raw_download_utilization_pct, 100)),
                     2,
                 )
                 upload_utilization_pct = round(

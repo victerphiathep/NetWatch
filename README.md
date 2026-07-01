@@ -62,7 +62,21 @@ NetWatch uses SQLite as a local stand-in for Databricks-style lakehouse tables:
 ```text
 Bronze: bronze_raw_node_readings
 Silver: silver_validated_node_readings, silver_anomaly_readings
-Gold:   gold_node_summary
+Gold:   gold_node_summary, gold_node_forecast
 ```
 
 The API and dashboard read from the medallion tables. Compatibility tables with the original names are still refreshed for older learning scripts.
+
+## Mock Telemetry Profiles
+
+The mock generator gives each node a realistic utilization pattern so the forecast layer has meaningful signal:
+
+```text
+stable nodes
+slow growth nodes
+rapid growth nodes
+already constrained nodes
+improving nodes
+```
+
+This simulates the kind of trend behavior a capacity planning team would watch for: nodes that are healthy today, nodes that are getting worse, and nodes that may need relief soon.

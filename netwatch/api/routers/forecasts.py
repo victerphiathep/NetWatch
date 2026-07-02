@@ -1,17 +1,18 @@
 from fastapi import APIRouter, HTTPException
 
 from netwatch.api import data_access
+from netwatch.api.schemas import NodeForecastResponse
 
 
 router = APIRouter(prefix="/forecasts", tags=["forecasts"])
 
 
-@router.get("")
+@router.get("", response_model=list[NodeForecastResponse])
 def get_node_forecasts():
     return data_access.fetch_node_forecasts()
 
 
-@router.get("/{node_id}")
+@router.get("/{node_id}", response_model=NodeForecastResponse)
 def get_node_forecast(node_id: str):
     node_forecast = data_access.fetch_node_forecast(node_id)
 

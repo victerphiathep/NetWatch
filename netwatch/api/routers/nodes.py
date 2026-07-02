@@ -1,17 +1,23 @@
 from fastapi import APIRouter, HTTPException, Query
 
 from netwatch.api import data_access
+from netwatch.api.schemas import (
+    AnomalyReadingResponse,
+    NodeForecastResponse,
+    NodeSummaryResponse,
+    RawNodeReadingResponse,
+)
 
 
 router = APIRouter(prefix="/nodes", tags=["nodes"])
 
 
-@router.get("")
+@router.get("", response_model=list[NodeSummaryResponse])
 def get_node_summaries():
     return data_access.fetch_node_summaries()
 
 
-@router.get("/{node_id}")
+@router.get("/{node_id}", response_model=NodeSummaryResponse)
 def get_node_summary(node_id: str):
     node_summary = data_access.fetch_node_summary(node_id)
 
@@ -21,7 +27,7 @@ def get_node_summary(node_id: str):
     return node_summary
 
 
-@router.get("/{node_id}/readings")
+@router.get("/{node_id}/readings", response_model=list[RawNodeReadingResponse])
 def get_node_readings(
     node_id: str,
     limit: int = Query(default=168, ge=1, le=1000),
@@ -34,7 +40,7 @@ def get_node_readings(
     return data_access.fetch_node_readings(node_id, limit)
 
 
-@router.get("/{node_id}/anomalies")
+@router.get("/{node_id}/anomalies", response_model=list[AnomalyReadingResponse])
 def get_node_anomalies(node_id: str):
     node_summary = data_access.fetch_node_summary(node_id)
 
@@ -44,7 +50,7 @@ def get_node_anomalies(node_id: str):
     return data_access.fetch_node_anomalies(node_id)
 
 
-@router.get("/{node_id}/forecast")
+@router.get("/{node_id}/forecast", response_model=NodeForecastResponse)
 def get_node_forecast(node_id: str):
     node_summary = data_access.fetch_node_summary(node_id)
 

@@ -97,6 +97,7 @@ def create_layout(
                             html.A("Regional Risk", href="#regional-risk"),
                             html.A("Anomalies", href="#anomalies"),
                             html.A("Forecast", href="#forecast"),
+                            html.A("NetWatch AI", href="#netwatch-ai"),
                             html.A("Summary Table", href="#summary-table"),
                         ],
                         className="dashboard-nav",
@@ -300,6 +301,55 @@ def create_layout(
                                                     "color": "#dbeafe",
                                                 },
                                             ),
+                                        ],
+                                        className="panel panel-wide anchor-section",
+                                    ),
+                                    html.Section(
+                                        id="netwatch-ai",
+                                        children=[
+                                            html.Div(
+                                                [
+                                                    html.Div(
+                                                        [
+                                                            html.H2("NetWatch AI"),
+                                                            html.P(
+                                                                "Ask operational questions grounded in NetWatch metrics, forecasts, anomalies, and docs."
+                                                            ),
+                                                        ],
+                                                        className="ai-title-group",
+                                                    ),
+                                                    html.Div(
+                                                        [
+                                                            dcc.Textarea(
+                                                                id="ai-question-input",
+                                                                value="Which nodes are forecast high risk and why?",
+                                                                className="ai-question-input",
+                                                            ),
+                                                            html.Button(
+                                                                "Ask AI",
+                                                                id="ask-ai-button",
+                                                                n_clicks=0,
+                                                                className="refresh-button ai-ask-button",
+                                                            ),
+                                                        ],
+                                                        className="ai-input-row",
+                                                    ),
+                                                    html.Div(
+                                                        "Waiting for a question.",
+                                                        id="ai-answer-status",
+                                                        className="refresh-status ai-answer-status",
+                                                    ),
+                                                    html.Div(
+                                                        id="ai-answer-output",
+                                                        className="ai-answer-output",
+                                                    ),
+                                                    html.Div(
+                                                        id="ai-source-output",
+                                                        className="ai-source-output",
+                                                    ),
+                                                ],
+                                                className="ai-panel",
+                                            )
                                         ],
                                         className="panel panel-wide anchor-section",
                                     ),

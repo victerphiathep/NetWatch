@@ -1,8 +1,12 @@
 import pandas as pd
+import requests
 from dash import Input, Output, State
 
+from netwatch.dashboard import api_client
 from netwatch.dashboard.components import (
     choose_default_node_id,
+    create_ai_answer_panel,
+    create_ai_source_cards,
     create_forecast_metric_tiles,
     create_metric_tiles,
     create_node_options,
@@ -182,4 +186,49 @@ def register_callbacks(dashboard_app):
                 refreshed_raw_readings_dataframe,
                 selected_node_id,
             ),
+        )
+
+    @dashboard_app.callback(
+        Output("ai-answer-status", "children"),
+        Output("ai-answer-output", "children"),
+        Output("ai-source-output", "children"),
+        Input("ask-ai-button", "n_clicks"),
+        State("ai-question-input", "value"),
+        prevent_initial_call=True,
+    )
+    def ask_netwatch_ai(ask_ai_click_count, ai_question):
+        if not ai_question or not ai_question.strip():
+            return (
+                "Enter a question first.",
+                "",
+                "",
+            )
+
+        try:
+            ai_response = api_client.ask_netwatch_ai(ai_question.strip())
+        except requests.HTTPError as http_error:
+            error_response = http_error.response
+            error_detail = error_response.text
+
+            try:
+                error_detail = error_response.json().get("detail", error_detail)
+            except ValueError:
+                pass
+
+            return (
+                f"AI request failed: {error_detail}",
+                "",
+                "",
+            )
+        except requests.RequestException as request_error:
+            return (
+                f"AI service unavailable: {request_error}",
+                "",
+                "",
+            )
+
+        return (
+            f"AI response generated. Ask count: {ask_ai_click_count}",
+            create_ai_answer_panel(ai_response["answer"]),
+            create_ai_source_cards(ai_response["retrieved_context"]),
         )

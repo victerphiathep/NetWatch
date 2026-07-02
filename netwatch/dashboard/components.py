@@ -268,3 +268,51 @@ def get_recommended_forecast_action(forecast_risk_level):
         return "Review forecast trend"
 
     return "No forecast action"
+
+
+def create_ai_answer_panel(ai_answer):
+    return html.Div(
+        [
+            html.Div("Answer", className="detail-label"),
+            html.Div(ai_answer, className="ai-answer-text"),
+        ],
+        className="ai-answer-card",
+    )
+
+
+def create_ai_source_cards(retrieved_context_documents):
+    if not retrieved_context_documents:
+        return []
+
+    source_cards = [
+        html.H3("Retrieved Sources", className="ai-source-heading"),
+    ]
+
+    for context_index, retrieved_context_document in enumerate(
+        retrieved_context_documents,
+        start=1,
+    ):
+        metadata = retrieved_context_document.get("metadata", {})
+        source_label = metadata.get("source", "unknown source")
+        document_type = metadata.get("document_type", "context")
+        node_id = metadata.get("node_id")
+        source_title = (
+            f"{context_index}. {document_type} | {source_label}"
+            if node_id is None
+            else f"{context_index}. {document_type} | {source_label} | {node_id}"
+        )
+
+        source_cards.append(
+            html.Div(
+                [
+                    html.Div(source_title, className="ai-source-title"),
+                    html.Pre(
+                        retrieved_context_document.get("text", ""),
+                        className="ai-source-text",
+                    ),
+                ],
+                className="ai-source-card",
+            )
+        )
+
+    return source_cards

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from netwatch.api.routers import (
+    ai,
     anomalies,
     forecasts,
     health,
@@ -22,3 +23,4 @@ api_app.include_router(readings.router)
 api_app.include_router(anomalies.router)
 api_app.include_router(forecasts.router)
 api_app.include_router(regions.router)
+api_app.include_router(ai.router)

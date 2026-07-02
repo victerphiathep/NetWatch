@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class HealthStatusResponse(BaseModel):
@@ -68,3 +68,19 @@ class RegionRiskSummaryResponse(BaseModel):
     region: str
     risk_level: str
     node_count: int
+
+
+class AskAiRequest(BaseModel):
+    question: str = Field(min_length=1)
+    result_count: int = Field(default=5, ge=1, le=10)
+
+
+class RetrievedContextResponse(BaseModel):
+    text: str
+    metadata: dict
+
+
+class AskAiResponse(BaseModel):
+    question: str
+    answer: str
+    retrieved_context: list[RetrievedContextResponse]
